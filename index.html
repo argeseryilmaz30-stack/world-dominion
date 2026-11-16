@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WORLD DOMINION — Prototype</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#0b1220;--panel:#121d30;--panel2:#18263d;--line:#2a3b56;--text:#eef4ff;--muted:#9eafc8;--gold:#e5b85c;--accent:#4da3ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);background:#0e1829;gap:12px;flex-wrap:wrap}
+.brand{font-weight:850;letter-spacing:1.5px}.brand span{color:var(--gold)}.date{color:var(--muted);font-size:13px}
+main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:12px;padding:12px;height:calc(100vh - 64px)}
+.mapbox,.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;min-height:300px}
+.maphead{display:flex;justify-content:space-between;align-items:center;padding:10px 13px;background:var(--panel2);border-bottom:1px solid var(--line);gap:8px;flex-wrap:wrap}
+.maphead small{color:var(--muted)}#map{height:calc(100% - 48px);min-height:300px;background:#14243a}
+.panel{padding:16px;overflow:auto}.eyebrow{color:var(--gold);font-size:11px;font-weight:800;letter-spacing:1.4px}
+h1{font-size:23px;margin:5px 0 14px}.muted{color:var(--muted);font-size:13px;line-height:1.5}
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
+.stat{background:var(--panel2);padding:11px;border:1px solid var(--line);border-radius:9px}.stat b{display:block;font-size:18px;margin-top:4px}.stat span{font-size:11px;color:var(--muted)}
+label{display:block;font-size:12px;color:var(--muted);margin:14px 0 6px}
+select,button{width:100%;padding:11px;border-radius:8px;border:1px solid var(--line);background:#0d1727;color:var(--text);font:inherit}
+button{background:#245d91;border:0;font-weight:700;cursor:pointer;margin-top:8px}button.secondary{background:#26364d}button:hover{filter:brightness(1.15)}
+.notice{padding:10px;border-radius:8px;background:#192b42;color:#c5d7ef;font-size:12px;line-height:1.5;margin-top:14px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted)}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+#status{font-size:12px;color:var(--muted);padding:7px 12px}
+.leaflet-container{font:inherit}.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#142238;color:#eef4ff}
+@media(max-width:850px){main{height:auto;grid-template-columns:1fr}.mapbox{height:62vh}.panel{min-height:unset}#map{height:calc(62vh - 48px)}}
+</style>
+</head>
+<body>
+<header><div class="brand">WORLD <span>DOMINION</span></div><div class="date">PROTOYPE JOUABLE · 2026</div></header>
+<main>
+<section class="mapbox">
+ <div class="maphead"><div><strong>Carte politique mondiale</strong><br><small>Sélectionne un pays directement sur la carte</small></div>
+ <div class="legend"><span><i class="dot" style="background:#c64d59"></i>Pays sélectionné</span><span><i class="dot" style="background:#557b9f"></i>Autres pays</span></div></div>
+ <div id="map"></div><div id="status">Chargement de la carte…</div>
+</section>
+<aside class="panel">
+ <div class="eyebrow">FICHE DU PAYS</div><h1 id="countryName">Sélectionne un pays</h1>
+ <p class="muted" id="countryDesc">Clique sur un pays de la carte pour afficher sa fiche. Ceci est la première version du jeu : la carte et la sélection fonctionnent, les systèmes avancés viendront ensuite.</p>
+ <div class="statgrid">
+  <div class="stat"><span>Population</span><b id="population">—</b></div>
+  <div class="stat"><span>PIB estimé</span><b id="gdp">—</b></div>
+  <div class="stat"><span>Capitale</span><b id="capital">—</b></div>
+  <div class="stat"><span>Territoire</span><b id="area">—</b></div>
+ </div>
+ <label for="ownerSelect">Changer le propriétaire du pays (test)</label>
+ <select id="ownerSelect"><option value="original">Propriétaire actuel</option><option value="player">Ton pays</option><option value="neutral">Neutre</option></select>
+ <button id="applyOwner">Appliquer le changement</button>
+ <button class="secondary" id="reset">Réinitialiser la partie</button>
+ <div class="notice"><b>Objectif de cette étape</b><br>Valider une carte mondiale cliquable et une interface simple. Le changement de propriétaire est une mécanique de démonstration, pas encore un système de provinces.</div>
+ <div class="notice">Astuce : sur téléphone, fais glisser la carte pour te déplacer et pince avec deux doigts pour zoomer.</div>
+</aside>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const map=L.map('map',{worldCopyJump:true,minZoom:2}).setView([25,15],2);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:8}).addTo(map);
+let geoLayer=null, selected=null, ownership={};
+const $=id=>document.getElementById(id);
+function countryName(f){return f.properties.ADMIN||f.properties.name||f.properties.NAME||'Pays inconnu'}
+function styleFeature(f){const n=countryName(f), own=ownership[n];return {color:n===selected?'#ffd166': '#263b55',weight:n===selected?2.5:0.8,fillColor:own==='player'?'#c64d59':own==='neutral'?'#7d8795':'#557b9f',fillOpacity:n===selected?.9:.72};}
+function showCountry(f){
+ selected=countryName(f);
+ $('countryName').textContent=selected;
+ $('countryDesc').textContent='Pays sélectionné. Les données détaillées et les provinces seront ajoutées dans les prochaines étapes.';
+ $('population').textContent='À connecter';
+ $('gdp').textContent='À connecter';
+ $('capital').textContent='À connecter';
+ $('area').textContent='À connecter';
+ $('ownerSelect').value=ownership[selected]||'original';
+ $('status').textContent='Pays sélectionné : '+selected;
+ if(geoLayer)geoLayer.setStyle(styleFeature);
+}
+function onEach(f,layer){layer.on({click:()=>showCountry(f),mouseover:e=>e.target.setStyle({weight:2,color:'#e5b85c',fillOpacity:.95}),mouseout:e=>geoLayer&&geoLayer.resetStyle(e.target)});layer.bindTooltip(countryName(f));}
+fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
+.then(r=>{if(!r.ok)throw new Error('Données cartographiques indisponibles');return r.json()})
+.then(data=>{geoLayer=L.geoJSON(data,{style:styleFeature,onEachFeature:onEach}).addTo(map);$('status').textContent='Carte chargée · '+data.features.length+' territoires cartographiques';})
+.catch(err=>{$('status').textContent='Impossible de charger la carte. Vérifie ta connexion Internet puis actualise la page.';console.error(err);});
+$('applyOwner').addEventListener('click',()=>{if(!selected){alert('Sélectionne d’abord un pays sur la carte.');return;}const v=$('ownerSelect').value;if(v==='original')delete ownership[selected];else ownership[selected]=v;if(geoLayer)geoLayer.setStyle(styleFeature);$('status').textContent='Modification locale appliquée à '+selected+'.';});
+$('reset').addEventListener('click',()=>{ownership={};selected=null;if(geoLayer)geoLayer.setStyle(styleFeature);$('countryName').textContent='Sélectionne un pays';$('countryDesc').textContent='Clique sur un pays de la carte pour afficher sa fiche.';['population','gdp','capital','area'].forEach(x=>$(x).textContent='—');$('ownerSelect').value='original';$('status').textContent='Partie réinitialisée.';});
+</script>
+</body></html>
