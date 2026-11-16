@@ -50,4 +50,329 @@ $('saveGame').onclick=()=>{localStorage.setItem('wd_ownership',JSON.stringify(ow
 $('applyOwner').onclick=()=>{if(!selected){alert('Sélectionne d’abord un pays.');return}let v=$('owner').value;if(!v)return;ownership[nameOf(selected)]=v;localStorage.setItem('wd_ownership',JSON.stringify(ownership));refresh();selectCountry(selected)};
 $('kurdistanScenario').onclick=()=>{$('countryName').textContent='Kurdistan';$('countryMeta').textContent='Pays jouable fictif • Scénario alternatif • Capitale : Erbil';$('iso').textContent='WD-KRD';$('status').textContent='Scénario alternatif';$('owner').value='__kurdistan';alert('Scénario Kurdistan activé. Ses provinces et données dédiées seront ajoutées dans une prochaine version.')};
 fetch(DATA_URL).then(r=>{if(!r.ok)throw Error('Données indisponibles');return r.json()}).then(data=>{features=(data.features||[]).filter(f=>nameOf(f)!=='Antarctica');geoLayer=L.geoJSON({type:'FeatureCollection',features},{style,onEachFeature:(f,l)=>{l.on({click:()=>selectCountry(f),mouseover:e=>e.target.setStyle({weight:2,color:'#f0bd55'}),mouseout:e=>{if(selected!==f)geoLayer.resetStyle(e.target)}});l.bindTooltip(nameOf(f),{sticky:true})}}).addTo(map);$('countryCount').textContent='Territoires : '+features.length;$('loadStatus').textContent=features.length+' territoires chargés';renderList(features.sort((a,b)=>nameOf(a).localeCompare(nameOf(b),'fr')))}).catch(err=>{$('loadStatus').textContent='Erreur de chargement';$('countryList').innerHTML='<div class="muted">Impossible de charger les frontières. Vérifie ta connexion puis actualise la page.</div>';console.error(err)});
+</script><style>
+/* WORLD DOMINION 3.0 */
+.wd3{max-width:1500px;margin:18px auto;padding:14px;color:#edf4ff}
+.wd3 *{box-sizing:border-box}
+.wd3-panel{background:#111d30;border:1px solid #2b405e;border-radius:15px;padding:16px;margin-bottom:12px}
+.wd3-title{font-size:23px;font-weight:900;letter-spacing:1px}
+.wd3-muted{color:#9eb0ca;font-size:13px;line-height:1.5}
+.wd3-gold{color:#f0bd55}
+.wd3-tabs{display:flex;gap:7px;overflow-x:auto;padding:8px 0 13px}
+.wd3-tabs button{white-space:nowrap}
+.wd3-tabs button.active{background:#2369a5;border-color:#58a9ed}
+.wd3-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.wd3-stat{background:#17263d;border:1px solid #2b405e;border-radius:11px;padding:12px}
+.wd3-stat small{display:block;color:#9eb0ca;font-size:11px}
+.wd3-stat strong{display:block;font-size:19px;margin-top:7px}
+.wd3-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.wd3-row{padding:11px 0;border-bottom:1px solid #2b405e;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.wd3-row:last-child{border:0}
+.wd3-progress{height:8px;background:#263a55;border-radius:20px;overflow:hidden;margin-top:7px}
+.wd3-progress span{display:block;height:100%;background:#4d9d87}
+.wd3-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.wd3 button{font-size:12px}
+.wd3 input,.wd3 select{margin-top:7px}
+.wd3-log{max-height:220px;overflow:auto;font-size:12px;color:#b9cbe2}
+.wd3-log div{padding:8px 0;border-bottom:1px solid #263a55}
+.wd3-hidden{display:none!important}
+.wd3-note{background:#172a40;padding:11px;border-radius:10px;color:#b9cbe2;font-size:12px;line-height:1.5}
+@media(max-width:700px){
+.wd3-grid{grid-template-columns:1fr 1fr}
+.wd3-columns{grid-template-columns:1fr}
+.wd3-title{font-size:19px}
+}
+</style>
+
+<section class="wd3" id="wd3">
+ <div class="wd3-panel">
+  <div class="wd3-title">WORLD <span class="wd3-gold">DOMINION</span> 3.0</div>
+  <div class="wd3-muted">GRAND STRATEGY • GOUVERNEMENT • ÉCONOMIE • DIPLOMATIE</div>
+  <div class="wd3-row">
+   <strong id="wd3-country">République du Kurdistan</strong>
+   <span class="wd3-gold" id="wd3-date">Année 2026 • Tour 1</span>
+  </div>
+  <div class="wd3-actions">
+   <select id="wd3-campaign" style="flex:1;min-width:150px">
+    <option value="Kurdistan">Kurdistan alternatif</option>
+    <option value="France">France</option>
+    <option value="Turkey">Turquie</option>
+    <option value="Germany">Allemagne</option>
+    <option value="Japan">Japon</option>
+    <option value="USA">États-Unis</option>
+   </select>
+   <button class="primary" id="wd3-start">Changer de pays</button>
+   <button class="primary" id="wd3-next">▶ TOUR SUIVANT</button>
+  </div>
+ </div>
+
+ <div class="wd3-grid">
+  <div class="wd3-stat"><small>Population</small><strong id="wd3-pop">45 M</strong></div>
+  <div class="wd3-stat"><small>PIB</small><strong id="wd3-gdp">450 Md $</strong></div>
+  <div class="wd3-stat"><small>Budget</small><strong id="wd3-budget">90 Md $</strong></div>
+  <div class="wd3-stat"><small>Stabilité</small><strong id="wd3-stability">88/100</strong></div>
+ </div>
+
+ <div class="wd3-tabs">
+  <button class="active" data-tab="overview">Vue générale</button>
+  <button data-tab="economy">Économie</button>
+  <button data-tab="government">Gouvernement</button>
+  <button data-tab="diplomacy">Diplomatie</button>
+  <button data-tab="provinces">Provinces</button>
+  <button data-tab="journal">Journal</button>
+ </div>
+
+ <div id="wd3-overview" class="wd3-panel">
+  <h3>🏛️ Situation nationale</h3>
+  <div class="wd3-muted" id="wd3-description">Gouvernement stable. Le pays poursuit son développement économique et diplomatique.</div>
+  <div class="wd3-columns" style="margin-top:15px">
+   <div>
+    <div class="wd3-row"><span>Popularité</span><strong id="wd3-popularity">76/100</strong></div>
+    <div class="wd3-progress"><span id="wd3-popbar" style="width:76%"></span></div>
+    <div class="wd3-row"><span>Diplomatie</span><strong id="wd3-diplomacy">95/100</strong></div>
+    <div class="wd3-progress"><span id="wd3-dipbar" style="width:95%"></span></div>
+   </div>
+   <div>
+    <div class="wd3-row"><span>Développement</span><strong id="wd3-development">72/100</strong></div>
+    <div class="wd3-progress"><span id="wd3-devbar" style="width:72%"></span></div>
+    <div class="wd3-row"><span>Recherche</span><strong id="wd3-research">60/100</strong></div>
+    <div class="wd3-progress"><span id="wd3-resbar" style="width:60%"></span></div>
+   </div>
+  </div>
+  <div class="wd3-note" style="margin-top:15px">Les tours représentent des périodes de simulation. Les décisions modifient les statistiques de ta partie.</div>
+ </div>
+
+ <div id="wd3-economy" class="wd3-panel wd3-hidden">
+  <h3>💰 Économie nationale</h3>
+  <div class="wd3-muted">Investis dans les secteurs pour développer ton pays.</div>
+  <div class="wd3-row"><span>Revenus annuels</span><strong id="wd3-income">55 Md $</strong></div>
+  <div class="wd3-row"><span>Dépenses annuelles</span><strong id="wd3-expenses">35 Md $</strong></div>
+  <div class="wd3-row"><span>Solde budgétaire</span><strong id="wd3-balance">+20 Md $</strong></div>
+  <h4>Investissements</h4>
+  <div class="wd3-actions">
+   <button data-invest="infrastructure">🏗️ Infrastructures (5 Md)</button>
+   <button data-invest="education">🎓 Éducation (4 Md)</button>
+   <button data-invest="health">🏥 Santé (4 Md)</button>
+   <button data-invest="technology">💻 Technologie (6 Md)</button>
+   <button data-invest="industry">🏭 Industrie (7 Md)</button>
+   <button data-invest="energy">⚡ Énergie (6 Md)</button>
+  </div>
+ </div>
+
+ <div id="wd3-government" class="wd3-panel wd3-hidden">
+  <h3>🏛️ Gouvernement</h3>
+  <div class="wd3-row"><span>Chef du gouvernement</span><strong id="wd3-leader">Napoleon</strong></div>
+  <div class="wd3-row"><span>Régime politique</span><strong id="wd3-regime">République démocratique</strong></div>
+  <label class="wd3-muted">Réforme nationale</label>
+  <select id="wd3-reform">
+   <option value="education">Réforme éducative</option>
+   <option value="social">Programme social</option>
+   <option value="business">Réforme économique</option>
+   <option value="environment">Transition écologique</option>
+   <option value="democracy">Renforcement démocratique</option>
+  </select>
+  <button class="primary" id="wd3-reformBtn" style="width:100%;margin-top:10px">Adopter la réforme</button>
+ </div>
+
+ <div id="wd3-diplomacy" class="wd3-panel wd3-hidden">
+  <h3>🌐 Relations internationales</h3>
+  <div class="wd3-muted">Développe tes relations avec les autres pays.</div>
+  <label class="wd3-muted">Pays partenaire</label>
+  <select id="wd3-partner">
+   <option>France</option><option>Turquie</option><option>Allemagne</option>
+   <option>États-Unis</option><option>Japon</option><option>Irak</option>
+   <option>Iran</option><option>Royaume-Uni</option><option>Italie</option>
+  </select>
+  <div class="wd3-actions">
+   <button data-diplomacy="trade">🤝 Accord commercial</button>
+   <button data-diplomacy="research">🔬 Coopération scientifique</button>
+   <button data-diplomacy="culture">🎭 Échange culturel</button>
+   <button data-diplomacy="summit">🏛️ Sommet diplomatique</button>
+  </div>
+  <div id="wd3-relations" style="margin-top:15px"></div>
+ </div>
+
+ <div id="wd3-provinces" class="wd3-panel wd3-hidden">
+  <h3>🗺️ Provinces nationales</h3>
+  <div class="wd3-muted">Provinces fictives du scénario alternatif du Kurdistan.</div>
+  <div id="wd3-provincelist"></div>
+  <div class="wd3-note">Cette liste est une simulation. Elle ne modifie pas encore les frontières dessinées sur la carte mondiale.</div>
+ </div>
+
+ <div id="wd3-journal" class="wd3-panel wd3-hidden">
+  <h3>📜 Journal national</h3>
+  <div class="wd3-log" id="wd3-log"></div>
+ </div>
+
+ <div class="wd3-panel">
+  <div class="wd3-actions">
+   <button class="primary" id="wd3-save">💾 Sauvegarder la partie</button>
+   <button id="wd3-load">📂 Charger la partie</button>
+   <button id="wd3-reset">Réinitialiser</button>
+  </div>
+  <div class="wd3-muted" id="wd3-message" style="margin-top:10px">Partie prête.</div>
+ </div>
+</section>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const initial={
+ country:"Kurdistan",year:2026,turn:1,
+ pop:45,gdp:450,budget:90,income:55,expenses:35,
+ stability:88,popularity:76,diplomacy:95,
+ development:72,research:60,
+ leader:"Napoleon",regime:"République démocratique",
+ relations:{},log:["2026 : Début de la simulation nationale."]
+};
+let game=JSON.parse(JSON.stringify(initial));
+const provinces=[
+ ["Erbil",8.5],["Diyarbakır",7.2],["Sulaymaniyah",6.1],
+ ["Duhok",4.8],["Kirkuk",5.5],["Van",4.2],
+ ["Mardin",3.7],["Mahabad",3.1],["Qamishli",2.9]
+];
+const profiles={
+ Kurdistan:{pop:45,gdp:450,budget:90,income:55,expenses:35,stability:88,popularity:76,diplomacy:95,development:72,research:60},
+ France:{pop:68,gdp:3100,budget:120,income:90,expenses:85,stability:75,popularity:55,diplomacy:85,development:88,research:90},
+ Turkey:{pop:86,gdp:1300,budget:80,income:60,expenses:55,stability:70,popularity:65,diplomacy:65,development:70,research:65},
+ Germany:{pop:84,gdp:4500,budget:150,income:110,expenses:95,stability:88,popularity:70,diplomacy:90,development:92,research:95},
+ Japan:{pop:123,gdp:4200,budget:140,income:100,expenses:90,stability:90,popularity:72,diplomacy:88,development:95,research:96},
+ USA:{pop:340,gdp:29000,budget:500,income:400,expenses:350,stability:75,popularity:60,diplomacy:90,development:95,research:98}
+};
+const labels={
+ infrastructure:"Infrastructures",education:"Éducation",health:"Santé",
+ technology:"Technologie",industry:"Industrie",energy:"Énergie"
+};
+const costs={infrastructure:5,education:4,health:4,technology:6,industry:7,energy:6};
+function log(t){
+ game.log.unshift("Année "+game.year+" : "+t);
+ game.log=game.log.slice(0,40);
+ renderLog();
+}
+function renderLog(){
+ $("wd3-log").innerHTML=game.log.map(x=>"<div>"+escapeHTML(x)+"</div>").join("");
+}
+function escapeHTML(s){
+ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function bar(id,value){
+ $(id).style.width=Math.max(0,Math.min(100,value))+"%";
+}
+function render(){
+ $("wd3-country").textContent=game.country==="Kurdistan"?"République du Kurdistan":game.country;
+ $("wd3-date").textContent="Année "+game.year+" • Tour "+game.turn;
+ $("wd3-campaign").value=game.country;
+ $("wd3-pop").textContent=game.pop+" M";
+ $("wd3-gdp").textContent=game.gdp.toLocaleString("fr-FR")+" Md $";
+ $("wd3-budget").textContent=game.budget.toLocaleString("fr-FR")+" Md $";
+ $("wd3-stability").textContent=game.stability+"/100";
+ $("wd3-popularity").textContent=game.popularity+"/100";
+ $("wd3-diplomacy").textContent=game.diplomacy+"/100";
+ $("wd3-development").textContent=game.development+"/100";
+ $("wd3-research").textContent=game.research+"/100";
+ bar("wd3-popbar",game.popularity);
+ bar("wd3-dipbar",game.diplomacy);
+ bar("wd3-devbar",game.development);
+ bar("wd3-resbar",game.research);
+ $("wd3-income").textContent=game.income+" Md $";
+ $("wd3-expenses").textContent=game.expenses+" Md $";
+ let balance=game.income-game.expenses;
+ $("wd3-balance").textContent=(balance>=0?"+":"")+balance+" Md $";
+ $("wd3-leader").textContent=game.leader;
+ $("wd3-regime").textContent=game.regime;
+ $("wd3-description").textContent=game.country==="Kurdistan"?
+ "République fictive du scénario alternatif. Le gouvernement cherche à devenir un centre économique, scientifique et diplomatique majeur.":
+ "Simulation nationale de "+game.country+". Développe ton économie, tes institutions et tes relations internationales.";
+ $("wd3-provincelist").innerHTML=provinces.map(p=>'<div class="wd3-row"><span>'+p[0]+'</span><strong>'+p[1]+' M habitants</strong></div>').join("");
+ $("wd3-relations").innerHTML=Object.entries(game.relations).map(([n,v])=>'<div class="wd3-row"><span>'+escapeHTML(n)+'</span><strong>'+v+'/100</strong></div>').join("")||'<div class="wd3-muted">Aucune relation enregistrée.</div>';
+ renderLog();
+}
+document.querySelectorAll("#wd3 [data-tab]").forEach(b=>{
+ b.onclick=()=>{
+  document.querySelectorAll("#wd3 [data-tab]").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  ["overview","economy","government","diplomacy","provinces","journal"].forEach(t=>$("wd3-"+t).classList.toggle("wd3-hidden",t!==b.dataset.tab));
+ };
+});
+$("wd3-start").onclick=()=>{
+ let c=$("wd3-campaign").value;
+ game=JSON.parse(JSON.stringify(initial));
+ game.country=c;
+ Object.assign(game,profiles[c]);
+ game.log=["Début d'une nouvelle campagne : "+c+"."];
+ log("Nouvelle campagne commencée.");
+ render();
+};
+$("wd3-next").onclick=()=>{
+ game.turn++;
+ if(game.turn>4){game.turn=1;game.year++}
+ let balance=game.income-game.expenses;
+ game.budget+=balance;
+ game.gdp=Math.max(1,Math.round(game.gdp*(1+game.development/1000)));
+ game.popularity=Math.max(0,Math.min(100,game.popularity+(balance>=0?1:-2)));
+ game.stability=Math.max(0,Math.min(100,game.stability+(balance>=0?1:-1)));
+ log("Nouveau tour. Solde budgétaire : "+(balance>=0?"+":"")+balance+" Md $. PIB actualisé.");
+ render();
+};
+document.querySelectorAll("#wd3 [data-invest]").forEach(b=>{
+ b.onclick=()=>{
+  let k=b.dataset.invest,cost=costs[k];
+  if(game.budget<cost){$("wd3-message").textContent="Budget insuffisant pour cet investissement.";return}
+  game.budget-=cost;
+  if(k==="technology")game.research=Math.min(100,game.research+5);
+  if(k==="education")game.research=Math.min(100,game.research+3);
+  if(k==="health")game.popularity=Math.min(100,game.popularity+3);
+  if(k==="infrastructure"||k==="industry"||k==="energy")game.development=Math.min(100,game.development+4);
+  game.gdp+=Math.round(cost*1.5);
+  log("Investissement dans "+labels[k]+". Coût : "+cost+" Md $.");
+  $("wd3-message").textContent="Investissement réalisé.";
+  render();
+ };
+});
+$("wd3-reformBtn").onclick=()=>{
+ let r=$("wd3-reform").value;
+ let names={education:"Réforme éducative",social:"Programme social",business:"Réforme économique",environment:"Transition écologique",democracy:"Renforcement démocratique"};
+ let cost=3;
+ if(game.budget<cost){$("wd3-message").textContent="Budget insuffisant.";return}
+ game.budget-=cost;
+ game.popularity=Math.min(100,game.popularity+3);
+ game.stability=Math.min(100,game.stability+2);
+ if(r==="education")game.research=Math.min(100,game.research+4);
+ if(r==="business")game.development=Math.min(100,game.development+4);
+ log("Adoption : "+names[r]+".");
+ render();
+};
+document.querySelectorAll("#wd3 [data-diplomacy]").forEach(b=>{
+ b.onclick=()=>{
+  let type=b.dataset.diplomacy;
+  let partner=$("wd3-partner").value;
+  let cost=type==="trade"?3:2;
+  if(game.budget<cost){$("wd3-message").textContent="Budget insuffisant.";return}
+  game.budget-=cost;
+  game.relations[partner]=Math.min(100,(game.relations[partner]||45)+ (type==="summit"?8:5));
+  game.diplomacy=Math.min(100,game.diplomacy+1);
+  if(type==="trade"){game.income+=2;game.gdp+=5}
+  let names={trade:"Accord commercial",research:"Coopération scientifique",culture:"Échange culturel",summit:"Sommet diplomatique"};
+  log(names[type]+" avec "+partner+".");
+  render();
+ };
+});
+$("wd3-save").onclick=()=>{
+ localStorage.setItem("wd3_save",JSON.stringify(game));
+ $("wd3-message").textContent="Partie sauvegardée sur cet appareil ✓";
+};
+$("wd3-load").onclick=()=>{
+ let s=localStorage.getItem("wd3_save");
+ if(!s){$("wd3-message").textContent="Aucune sauvegarde trouvée.";return}
+ try{game=JSON.parse(s);render();$("wd3-message").textContent="Partie chargée ✓"}
+ catch(e){$("wd3-message").textContent="Sauvegarde illisible."}
+};
+$("wd3-reset").onclick=()=>{
+ if(!confirm("Réinitialiser cette campagne ?"))return;
+ game=JSON.parse(JSON.stringify(initial));
+ render();
+ $("wd3-message").textContent="Nouvelle partie.";
+};
+render();
+})();
 </script></body></html>
