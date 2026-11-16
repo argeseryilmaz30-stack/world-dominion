@@ -375,4 +375,274 @@ $("wd3-reset").onclick=()=>{
 };
 render();
 })();
-</script></body></html>
+</script><!-- WORLD DOMINION 4.0 -->
+<style>
+.wd4{max-width:1500px;margin:20px auto;padding:14px;color:#edf4ff}
+.wd4 *{box-sizing:border-box}
+.wd4box{background:linear-gradient(145deg,#14243a,#0b1728);border:1px solid #304966;border-radius:16px;padding:17px;margin-bottom:13px}
+.wd4head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.wd4title{font-size:25px;font-weight:900;letter-spacing:1px}
+.wd4gold{color:#f0bd55}
+.wd4muted{color:#a9bad0;font-size:12px;line-height:1.5}
+.wd4grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:13px}
+.wd4stat{background:#1b304a;border:1px solid #35506f;border-radius:12px;padding:12px}
+.wd4stat small{display:block;color:#a9bad0;font-size:11px}
+.wd4stat strong{display:block;font-size:19px;margin-top:7px}
+.wd4input{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.wd4input input{flex:1;min-width:180px}
+.wd4input input,.wd4 select{background:#091525;color:white;border:1px solid #45617e;border-radius:10px;padding:12px}
+.wd4provinces{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.wd4province{background:#1b304a;border:1px solid #35506f;border-radius:10px;padding:11px}
+.wd4province strong{font-size:14px}
+.wd4province small{display:block;color:#a9bad0;margin-top:5px}
+.wd4log{max-height:200px;overflow:auto;font-size:13px}
+.wd4log div{padding:9px 0;border-bottom:1px solid #304966}
+.wd4badge{background:#203c59;border-radius:20px;padding:6px 10px;font-size:11px}
+@media(max-width:650px){
+.wd4grid{grid-template-columns:1fr 1fr}
+.wd4provinces{grid-template-columns:1fr 1fr}
+.wd4title{font-size:20px}
+}
+</style>
+
+<section class="wd4" id="wd4">
+
+<div class="wd4box">
+ <div class="wd4head">
+  <div>
+   <div class="wd4title">WORLD <span class="wd4gold">DOMINION</span> 4.0</div>
+   <div class="wd4muted">GLOBAL STRATEGY • WORLD SIMULATION</div>
+  </div>
+  <span class="wd4badge" id="wd4status">SYSTÈME ACTIF</span>
+ </div>
+ <p class="wd4muted">Scénario alternatif fictif. Les frontières du scénario sont des éléments de jeu.</p>
+</div>
+
+<div class="wd4grid">
+ <div class="wd4stat"><small>Effectifs militaires abstraits</small><strong id="wd4army">180 000</strong></div>
+ <div class="wd4stat"><small>Préparation</small><strong id="wd4ready">72/100</strong></div>
+ <div class="wd4stat"><small>Budget défense</small><strong id="wd4defense">12 Md $</strong></div>
+ <div class="wd4stat"><small>Provinces du scénario</small><strong>9</strong></div>
+</div>
+
+<div class="wd4box">
+ <div class="wd4head">
+  <h3>⌨️ CENTRE DE COMMANDEMENT</h3>
+  <span class="wd4badge">Décisions nationales</span>
+ </div>
+ <p class="wd4muted">
+ Écris une décision pour ton gouvernement.
+ <br>Exemples :
+ <br>• Investir 5 milliards dans les infrastructures.
+ <br>• Construire une université à Erbil.
+ <br>• Développer les hôpitaux.
+ <br>• Proposer un accord commercial avec la France.
+ <br>• Organiser un sommet avec l'Allemagne.
+ </p>
+ <div class="wd4input">
+  <input id="wd4command" placeholder="Écris ta décision ici...">
+  <button class="primary" id="wd4execute">EXÉCUTER</button>
+ </div>
+ <p class="wd4muted" id="wd4answer">En attente d'une décision.</p>
+</div>
+
+<div class="wd4box">
+ <div class="wd4head">
+  <h3>🗺️ PROVINCES DU KURDISTAN</h3>
+  <button id="wd4zoom">CENTRER LA CARTE</button>
+ </div>
+ <div class="wd4provinces" id="wd4provinces"></div>
+ <p class="wd4muted">Régions représentées dans le scénario fictif. Leur tracé est schématique.</p>
+</div>
+
+<div class="wd4box">
+ <h3>📜 JOURNAL INTERNATIONAL</h3>
+ <div class="wd4log" id="wd4journal">
+  <div>2026 : La campagne commence.</div>
+ </div>
+</div>
+
+</section>
+
+<script>
+(()=>{
+ const $=id=>document.getElementById(id);
+
+ // Couleurs uniques pour les pays de la carte.
+ function countryColor(name){
+   let h=0;
+   for(let i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))>>>0;
+   return `hsl(${h%360} 48% 43%)`;
+ }
+
+ // Remplace le style uniforme de la carte par une palette politique.
+ style=function(f){
+   const n=nameOf(f);
+   return {
+     color:"#172b43",
+     weight:1,
+     fillColor:ownership[n]==="__kurdistan"?"#d6b34e":
+       ownership[n]?"#4d9d87":countryColor(n),
+     fillOpacity:.84
+   };
+ };
+
+ if(geoLayer)geoLayer.setStyle(style);
+
+ // Provinces du scénario.
+ const provinces=[
+  ["Erbil",36.19,44.01],
+  ["Diyarbakır",37.91,40.23],
+  ["Sulaymaniyah",35.56,45.44],
+  ["Duhok",36.87,42.95],
+  ["Kirkuk",35.47,44.39],
+  ["Van",38.50,43.38],
+  ["Mardin",37.31,40.74],
+  ["Mahabad",36.76,45.72],
+  ["Qamishli",37.05,41.22]
+ ];
+
+ $("wd4provinces").innerHTML=provinces.map(p=>
+  `<div class="wd4province"><strong>${p[0]}</strong><small>Province du scénario</small></div>`
+ ).join("");
+
+ // Zone cartographique indicative du scénario.
+ const outline=[
+  [39.0,39.2],[38.7,41.1],[38.4,43.7],
+  [37.6,45.4],[36.2,46.0],[35.0,45.3],
+  [34.7,43.8],[35.0,41.8],[35.7,40.1],
+  [36.7,38.8],[37.7,38.7]
+ ];
+
+ const region=L.polygon(outline,{
+  color:"#f0bd55",
+  weight:3,
+  dashArray:"7 5",
+  fillColor:"#d6b34e",
+  fillOpacity:.17
+ }).addTo(map);
+
+ region.bindTooltip("Kurdistan • Scénario alternatif");
+
+ provinces.forEach(p=>{
+  L.circleMarker([p[1],p[2]],{
+   radius:5,
+   color:"#fff0bd",
+   weight:2,
+   fillColor:"#d6b34e",
+   fillOpacity:1
+  }).bindTooltip(p[0]).addTo(map);
+ });
+
+ $("wd4zoom").onclick=()=>{
+  map.fitBounds(region.getBounds(),{padding:[20,20]});
+ };
+
+ // Indicateurs militaires abstraits.
+ const military={
+  army:180000,
+  readiness:72,
+  defense:12
+ };
+
+ function journal(message){
+  const d=document.createElement("div");
+  d.textContent="2026 : "+message;
+  $("wd4journal").prepend(d);
+ }
+
+ // Centre de commande connecté aux boutons existants de WD3.
+ function execute(){
+  const raw=$("wd4command").value.trim();
+  const s=raw.toLowerCase();
+  let message="";
+
+  if(!raw){
+   $("wd4answer").textContent="Écris d'abord une décision.";
+   return;
+  }
+
+  const amountMatch=s.match(/(\d+(?:[.,]\d+)?)\s*(?:milliard|milliards|md)\b/);
+  const amount=amountMatch?Number(amountMatch[1].replace(",",".")):null;
+
+  if(/infrastructure|investir|transport|route/.test(s)){
+   if(amount===null){
+    message="Précise le montant de ton investissement.";
+   }else if(amount>0 && amount<=game.budget){
+    game.budget-=amount;
+    game.development=Math.min(100,game.development+Math.max(1,Math.round(amount/2)));
+    game.gdp+=Math.round(amount*1.2);
+    message="Investissement de "+amount+" Md $ enregistré.";
+    render();
+   }else{
+    message="Budget insuffisant.";
+   }
+  }
+
+  else if(/universit|éducation|education|hôpital|hopital|santé|sante/.test(s)){
+   const city=provinces.find(p=>s.includes(p[0].toLowerCase()));
+   if(game.budget>=3){
+    game.budget-=3;
+    game.development=Math.min(100,game.development+2);
+    game.popularity=Math.min(100,game.popularity+2);
+    message="Projet civil validé"+(city?" à "+city[0]:"")+". Coût : 3 Md $.";
+    render();
+   }else{
+    message="Budget insuffisant.";
+   }
+  }
+
+  else if(/accord|commerce|sommet|coopération|cooperation/.test(s)){
+   const partners={
+    "france":"France",
+    "turquie":"Turquie",
+    "allemagne":"Allemagne",
+    "japon":"Japon",
+    "irak":"Irak",
+    "iran":"Iran",
+    "italie":"Italie"
+   };
+   const partner=Object.keys(partners).find(p=>s.includes(p));
+   if(partner){
+    game.relations[partners[partner]]=Math.min(100,(game.relations[partners[partner]]||45)+7);
+    game.diplomacy=Math.min(100,game.diplomacy+2);
+    if(/commerce/.test(s)){
+     game.income+=1;
+     game.gdp+=3;
+    }
+    message="Initiative diplomatique enregistrée avec "+partners[partner]+".";
+    render();
+   }else{
+    message="Indique le pays partenaire.";
+   }
+  }
+
+  else if(/armée|effectif|troupes|soldats/.test(s)){
+   message="Effectifs abstraits : "+military.army.toLocaleString("fr-FR")+". Préparation : "+military.readiness+"/100. Les ordres opérationnels ne sont pas simulés.";
+  }
+
+  else{
+   message="Commande inconnue. Essaie une décision économique, éducative ou diplomatique.";
+  }
+
+  $("wd4answer").textContent=message;
+  journal(message);
+  $("wd4command").value="";
+ }
+
+ $("wd4execute").onclick=execute;
+ $("wd4command").addEventListener("keydown",e=>{
+  if(e.key==="Enter")execute();
+ });
+
+ // Synchronisation de la palette après changement de propriétaire.
+ const oldRefresh=refresh;
+ refresh=function(){
+  oldRefresh();
+  if(geoLayer)geoLayer.setStyle(style);
+ };
+
+ $("wd4status").textContent="CARTE ET COMMANDES ACTIVES";
+})();
+</script>
+<!-- FIN WORLD DOMINION 4.0 --></body></html>
