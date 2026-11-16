@@ -1,84 +1,53 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WORLD DOMINION — Prototype</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1220"><title>WORLD DOMINION</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-:root{--bg:#0b1220;--panel:#121d30;--panel2:#18263d;--line:#2a3b56;--text:#eef4ff;--muted:#9eafc8;--gold:#e5b85c;--accent:#4da3ff}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);background:#0e1829;gap:12px;flex-wrap:wrap}
-.brand{font-weight:850;letter-spacing:1.5px}.brand span{color:var(--gold)}.date{color:var(--muted);font-size:13px}
-main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:12px;padding:12px;height:calc(100vh - 64px)}
-.mapbox,.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;min-height:300px}
-.maphead{display:flex;justify-content:space-between;align-items:center;padding:10px 13px;background:var(--panel2);border-bottom:1px solid var(--line);gap:8px;flex-wrap:wrap}
-.maphead small{color:var(--muted)}#map{height:calc(100% - 48px);min-height:300px;background:#14243a}
-.panel{padding:16px;overflow:auto}.eyebrow{color:var(--gold);font-size:11px;font-weight:800;letter-spacing:1.4px}
-h1{font-size:23px;margin:5px 0 14px}.muted{color:var(--muted);font-size:13px;line-height:1.5}
-.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
-.stat{background:var(--panel2);padding:11px;border:1px solid var(--line);border-radius:9px}.stat b{display:block;font-size:18px;margin-top:4px}.stat span{font-size:11px;color:var(--muted)}
-label{display:block;font-size:12px;color:var(--muted);margin:14px 0 6px}
-select,button{width:100%;padding:11px;border-radius:8px;border:1px solid var(--line);background:#0d1727;color:var(--text);font:inherit}
-button{background:#245d91;border:0;font-weight:700;cursor:pointer;margin-top:8px}button.secondary{background:#26364d}button:hover{filter:brightness(1.15)}
-.notice{padding:10px;border-radius:8px;background:#192b42;color:#c5d7ef;font-size:12px;line-height:1.5;margin-top:14px}
-.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted)}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
-#status{font-size:12px;color:var(--muted);padding:7px 12px}
-.leaflet-container{font:inherit}.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#142238;color:#eef4ff}
-@media(max-width:850px){main{height:auto;grid-template-columns:1fr}.mapbox{height:62vh}.panel{min-height:unset}#map{height:calc(62vh - 48px)}}
-</style>
-</head>
+:root{--bg:#09111f;--panel:#111d30;--panel2:#17263d;--line:#2b405e;--text:#edf4ff;--muted:#9eb0ca;--gold:#f0bd55}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{padding:18px 16px 14px;background:#0c1728;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:1000}
+.brand{font-weight:900;letter-spacing:1.6px;font-size:20px}.brand span{color:var(--gold)}.sub{font-size:11px;color:var(--muted);margin-top:3px}.badge{border:1px solid #385273;border-radius:20px;padding:7px 10px;font-size:11px;color:#b9cbe2}
+main{max-width:1500px;margin:auto;padding:14px;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px}
+.mapbox,.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden}.maphead{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line)}.maphead strong{font-size:14px}.maphead small{color:var(--muted)}
+#map{height:min(69vh,760px);min-height:440px;background:#17263a}.controls{padding:12px;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line)}
+button,input,select{font:inherit}button{background:#1c3554;color:var(--text);border:1px solid #385779;border-radius:10px;padding:10px 12px;font-weight:650;cursor:pointer}button.primary{background:#2369a5;border-color:#3989ca}
+aside{display:flex;flex-direction:column;gap:12px}.card{padding:16px}.eyebrow{font-size:11px;letter-spacing:1.8px;color:var(--gold);font-weight:800}.countryname{font-size:25px;font-weight:850;margin:8px 0 4px}.muted{color:var(--muted);font-size:13px;line-height:1.5}
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px}.stat label{display:block;color:var(--muted);font-size:11px}.stat strong{display:block;margin-top:7px;font-size:14px}
+label.field{display:block;color:var(--muted);font-size:12px;margin:14px 0 6px}input,select{width:100%;background:#0c1728;border:1px solid #385273;color:var(--text);padding:12px;border-radius:10px}.countrylist{max-height:270px;overflow:auto;margin-top:8px}.countryitem{padding:9px 10px;border-bottom:1px solid #263a55;font-size:13px;display:flex;justify-content:space-between;gap:8px;cursor:pointer}.countryitem:hover{background:#1b2d47}.countryitem small{color:var(--muted)}
+.notice{padding:11px;border-radius:10px;background:#172a40;color:#b8cbe3;font-size:12px;line-height:1.5}.leaflet-container{font-family:inherit}.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#122139;color:#eef5ff}.leaflet-control-zoom a{background:#122139!important;color:white!important;border-color:#385273!important}
+@media(max-width:900px){main{grid-template-columns:1fr}#map{height:58vh;min-height:380px}aside{display:grid;grid-template-columns:1fr 1fr}.card:first-child{grid-column:1/-1}}
+@media(max-width:560px){main{padding:9px;gap:9px}header{padding:14px 12px}.brand{font-size:17px}#map{height:52vh;min-height:340px}aside{display:flex}.countrylist{max-height:220px}}
+</style></head>
 <body>
-<header><div class="brand">WORLD <span>DOMINION</span></div><div class="date">PROTOYPE JOUABLE · 2026</div></header>
-<main>
-<section class="mapbox">
- <div class="maphead"><div><strong>Carte politique mondiale</strong><br><small>Sélectionne un pays directement sur la carte</small></div>
- <div class="legend"><span><i class="dot" style="background:#c64d59"></i>Pays sélectionné</span><span><i class="dot" style="background:#557b9f"></i>Autres pays</span></div></div>
- <div id="map"></div><div id="status">Chargement de la carte…</div>
-</section>
-<aside class="panel">
- <div class="eyebrow">FICHE DU PAYS</div><h1 id="countryName">Sélectionne un pays</h1>
- <p class="muted" id="countryDesc">Clique sur un pays de la carte pour afficher sa fiche. Ceci est la première version du jeu : la carte et la sélection fonctionnent, les systèmes avancés viendront ensuite.</p>
- <div class="statgrid">
-  <div class="stat"><span>Population</span><b id="population">—</b></div>
-  <div class="stat"><span>PIB estimé</span><b id="gdp">—</b></div>
-  <div class="stat"><span>Capitale</span><b id="capital">—</b></div>
-  <div class="stat"><span>Territoire</span><b id="area">—</b></div>
- </div>
- <label for="ownerSelect">Changer le propriétaire du pays (test)</label>
- <select id="ownerSelect"><option value="original">Propriétaire actuel</option><option value="player">Ton pays</option><option value="neutral">Neutre</option></select>
- <button id="applyOwner">Appliquer le changement</button>
- <button class="secondary" id="reset">Réinitialiser la partie</button>
- <div class="notice"><b>Objectif de cette étape</b><br>Valider une carte mondiale cliquable et une interface simple. Le changement de propriétaire est une mécanique de démonstration, pas encore un système de provinces.</div>
- <div class="notice">Astuce : sur téléphone, fais glisser la carte pour te déplacer et pince avec deux doigts pour zoomer.</div>
-</aside>
-</main>
+<header><div><div class="brand">WORLD <span>DOMINION</span></div><div class="sub">GRAND STRATEGY • WORLD SIMULATION</div></div><div class="badge" id="loadStatus">Chargement du monde…</div></header>
+<main><section class="mapbox"><div class="maphead"><strong>🌍 CARTE MONDIALE INTERACTIVE</strong><small id="countryCount">Pays : …</small></div><div id="map"></div><div class="controls"><button class="primary" id="resetView">Vue mondiale</button><button id="resetColors">Réinitialiser les territoires</button><button id="saveGame">💾 Sauvegarder</button></div></section>
+<aside>
+<section class="card"><div class="eyebrow">FICHE DU PAYS</div><div class="countryname" id="countryName">Sélectionne un pays</div><div class="muted" id="countryMeta">Appuie sur un pays de la carte ou cherche-le dans la liste.</div>
+<div class="statgrid"><div class="stat"><label>Code ISO</label><strong id="iso">—</strong></div><div class="stat"><label>Statut</label><strong id="status">Non sélectionné</strong></div><div class="stat"><label>Population</label><strong>À intégrer</strong></div><div class="stat"><label>PIB</label><strong>À intégrer</strong></div></div>
+<label class="field" for="owner">Changer le propriétaire (mode scénario)</label><select id="owner"><option value="">Choisir un propriétaire…</option><option value="__independent">Indépendant / propriétaire actuel</option><option value="__kurdistan">Kurdistan (scénario alternatif)</option></select><button class="primary" style="width:100%;margin-top:9px" id="applyOwner">Appliquer au pays sélectionné</button><div class="muted" style="margin-top:8px">Les changements sont locaux à ce navigateur. Ils ne modifient aucune frontière réelle.</div></section>
+<section class="card"><div class="eyebrow">EXPLORATEUR</div><label class="field" for="search">Rechercher un pays</label><input id="search" type="search" placeholder="Ex. France, Japon, Kurdistan…"><div class="countrylist" id="countryList"><div class="muted">Chargement de la liste…</div></div></section>
+<section class="card"><div class="eyebrow">SCÉNARIO</div><div class="countryname" style="font-size:18px">Monde contemporain</div><div class="muted">Carte de référence fondée sur les frontières du jeu. Le Kurdistan est proposé comme pays jouable dans un scénario alternatif, et non comme État actuellement reconnu.</div><button id="kurdistanScenario" style="width:100%;margin-top:12px">🇹🇯 Activer le scénario Kurdistan</button></section>
+<section class="card"><div class="notice">Cette version contient la carte des pays et la sélection interactive. Les données économiques, les gouvernements, les provinces et l'IA diplomatique seront ajoutés ensuite. Pas de faux chiffres juste pour remplir des cases.</div></section>
+</aside></main><footer style="text-align:center;color:#7186a4;font-size:11px;padding:4px 16px 24px">WORLD DOMINION • Prototype évolutif • Données cartographiques GeoJSON • Fond OpenStreetMap</footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const map=L.map('map',{worldCopyJump:true,minZoom:2}).setView([25,15],2);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:8}).addTo(map);
-let geoLayer=null, selected=null, ownership={};
+const DATA_URL="https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson";
+const map=L.map('map',{worldCopyJump:true,minZoom:2}).setView([24,8],2);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:8,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+let geoLayer=null,features=[],selected=null,ownership=JSON.parse(localStorage.getItem('wd_ownership')||'{}');
 const $=id=>document.getElementById(id);
-function countryName(f){return f.properties.ADMIN||f.properties.name||f.properties.NAME||'Pays inconnu'}
-function styleFeature(f){const n=countryName(f), own=ownership[n];return {color:n===selected?'#ffd166': '#263b55',weight:n===selected?2.5:0.8,fillColor:own==='player'?'#c64d59':own==='neutral'?'#7d8795':'#557b9f',fillOpacity:n===selected?.9:.72};}
-function showCountry(f){
- selected=countryName(f);
- $('countryName').textContent=selected;
- $('countryDesc').textContent='Pays sélectionné. Les données détaillées et les provinces seront ajoutées dans les prochaines étapes.';
- $('population').textContent='À connecter';
- $('gdp').textContent='À connecter';
- $('capital').textContent='À connecter';
- $('area').textContent='À connecter';
- $('ownerSelect').value=ownership[selected]||'original';
- $('status').textContent='Pays sélectionné : '+selected;
- if(geoLayer)geoLayer.setStyle(styleFeature);
-}
-function onEach(f,layer){layer.on({click:()=>showCountry(f),mouseover:e=>e.target.setStyle({weight:2,color:'#e5b85c',fillOpacity:.95}),mouseout:e=>geoLayer&&geoLayer.resetStyle(e.target)});layer.bindTooltip(countryName(f));}
-fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
-.then(r=>{if(!r.ok)throw new Error('Données cartographiques indisponibles');return r.json()})
-.then(data=>{geoLayer=L.geoJSON(data,{style:styleFeature,onEachFeature:onEach}).addTo(map);$('status').textContent='Carte chargée · '+data.features.length+' territoires cartographiques';})
-.catch(err=>{$('status').textContent='Impossible de charger la carte. Vérifie ta connexion Internet puis actualise la page.';console.error(err);});
-$('applyOwner').addEventListener('click',()=>{if(!selected){alert('Sélectionne d’abord un pays sur la carte.');return;}const v=$('ownerSelect').value;if(v==='original')delete ownership[selected];else ownership[selected]=v;if(geoLayer)geoLayer.setStyle(styleFeature);$('status').textContent='Modification locale appliquée à '+selected+'.';});
-$('reset').addEventListener('click',()=>{ownership={};selected=null;if(geoLayer)geoLayer.setStyle(styleFeature);$('countryName').textContent='Sélectionne un pays';$('countryDesc').textContent='Clique sur un pays de la carte pour afficher sa fiche.';['population','gdp','capital','area'].forEach(x=>$(x).textContent='—');$('ownerSelect').value='original';$('status').textContent='Partie réinitialisée.';});
-</script>
-</body></html>
+function nameOf(f){let p=f.properties||{};return p.ADMIN||p.name||p.NAME||p.SOVEREIGNT||'Pays sans nom'}
+function isoOf(f){let p=f.properties||{};return p.ISO_A3||p.ADM0_A3||p.iso_a3||p.ISO3||'—'}
+function style(f){let n=nameOf(f);return{color:'#172b43',weight:1,fillColor:ownership[n]==='__kurdistan'?'#d6b34e':ownership[n]?'#4d9d87':'#52799e',fillOpacity:.83}}
+function selectCountry(f){selected=f;let n=nameOf(f);$('countryName').textContent=n;$('countryMeta').textContent='Pays sélectionné sur la carte.';$('iso').textContent=isoOf(f);$('status').textContent=ownership[n]==='__kurdistan'?'Kurdistan (scénario)':ownership[n]?'Territoire attribué':'Référence';$('owner').value=ownership[n]||'';geoLayer.setStyle(style);geoLayer.eachLayer(l=>{if(l.feature===f)l.setStyle({color:'#f0bd55',weight:3,fillOpacity:1})})}
+function renderList(items){let el=$('countryList');el.innerHTML='';items.slice(0,300).forEach(f=>{let d=document.createElement('div');d.className='countryitem';let a=document.createElement('span'),b=document.createElement('small');a.textContent=nameOf(f);b.textContent=isoOf(f);d.append(a,b);d.onclick=()=>{selectCountry(f);let bounds=L.geoJSON(f).getBounds();if(bounds.isValid())map.fitBounds(bounds,{maxZoom:5})};el.appendChild(d)});if(!items.length)el.innerHTML='<div class="muted">Aucun résultat.</div>'}
+function refresh(){if(geoLayer)geoLayer.setStyle(style);renderList(features.filter(f=>nameOf(f).toLowerCase().includes($('search').value.toLowerCase())))}
+$('search').addEventListener('input',refresh);$('resetView').onclick=()=>map.setView([24,8],2);
+$('resetColors').onclick=()=>{ownership={};localStorage.removeItem('wd_ownership');refresh();if(selected)selectCountry(selected)};
+$('saveGame').onclick=()=>{localStorage.setItem('wd_ownership',JSON.stringify(ownership));$('loadStatus').textContent='Partie sauvegardée ✓';setTimeout(()=>$('loadStatus').textContent=features.length+' territoires chargés',2200)};
+$('applyOwner').onclick=()=>{if(!selected){alert('Sélectionne d’abord un pays.');return}let v=$('owner').value;if(!v)return;ownership[nameOf(selected)]=v;localStorage.setItem('wd_ownership',JSON.stringify(ownership));refresh();selectCountry(selected)};
+$('kurdistanScenario').onclick=()=>{$('countryName').textContent='Kurdistan';$('countryMeta').textContent='Pays jouable fictif • Scénario alternatif • Capitale : Erbil';$('iso').textContent='WD-KRD';$('status').textContent='Scénario alternatif';$('owner').value='__kurdistan';alert('Scénario Kurdistan activé. Ses provinces et données dédiées seront ajoutées dans une prochaine version.')};
+fetch(DATA_URL).then(r=>{if(!r.ok)throw Error('Données indisponibles');return r.json()}).then(data=>{features=(data.features||[]).filter(f=>nameOf(f)!=='Antarctica');geoLayer=L.geoJSON({type:'FeatureCollection',features},{style,onEachFeature:(f,l)=>{l.on({click:()=>selectCountry(f),mouseover:e=>e.target.setStyle({weight:2,color:'#f0bd55'}),mouseout:e=>{if(selected!==f)geoLayer.resetStyle(e.target)}});l.bindTooltip(nameOf(f),{sticky:true})}}).addTo(map);$('countryCount').textContent='Territoires : '+features.length;$('loadStatus').textContent=features.length+' territoires chargés';renderList(features.sort((a,b)=>nameOf(a).localeCompare(nameOf(b),'fr')))}).catch(err=>{$('loadStatus').textContent='Erreur de chargement';$('countryList').innerHTML='<div class="muted">Impossible de charger les frontières. Vérifie ta connexion puis actualise la page.</div>';console.error(err)});
+</script></body></html>
